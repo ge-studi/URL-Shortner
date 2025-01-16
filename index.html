@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .result p {
+            font-size: 16px;
+            word-wrap: break-word;
+        }
+        .qr-code img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URL Shortener</h1>
+        <div class="form-group">
+            <label for="originalUrl">Enter the original URL:</label>
+            <input type="url" id="originalUrl" placeholder="https://example.com" required>
+        </div>
+        <div class="form-group">
+            <label for="expirationDays">Expiration (days):</label>
+            <input type="number" id="expirationDays" placeholder="7" min="1">
+        </div>
+        <div class="form-group">
+            <button id="shortenBtn">Shorten URL</button>
+        </div>
+
+        <div class="result">
+            <p id="shortUrlResult"></p>
+            <div class="qr-code" id="qrCodeResult"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('shortenBtn').addEventListener('click', async function() {
+            const originalUrl = document.getElementById('originalUrl').value;
+            const expirationDays = document.getElementById('expirationDays').value || 7;
+
+            if (!originalUrl) {
+                alert('Please enter a valid URL.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/url/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        originalUrl,
+                        expirationDays
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 201) {
+                    document.getElementById('shortUrlResult').innerHTML = `
+                        <strong>Shortened URL:</strong> <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a>
+                    `;
+                    document.getElementById('qrCodeResult').innerHTML = `
+                        <strong>QR Code:</strong>
+                        <img src="${data.qrCode}" alt="QR Code">
+                    `;
+                } else {
+                    alert(data.error || 'Error occurred while shortening the URL.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Something went wrong, please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
